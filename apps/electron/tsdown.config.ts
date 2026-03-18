@@ -16,7 +16,7 @@ const alwaysBundle = ['@opencopilot/shared']
 export default defineConfig([
   {
     entry: {
-      index: './main/index.ts'
+      index: './src/main/index.ts'
     },
     outDir: `${distRoot}/main`,
     format: 'cjs',
@@ -32,7 +32,7 @@ export default defineConfig([
   },
   {
     entry: {
-      index: './preload/index.ts'
+      index: './src/preload/index.ts'
     },
     outDir: `${distRoot}/preload`,
     format: 'cjs',

@@ -11,8 +11,8 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const tsFiles = ['**/*.{ts,tsx,mts,cts}']
 const typeCheckedFiles = [
   'apps/web/**/*.{ts,tsx}',
-  'apps/electron/main/**/*.ts',
-  'apps/electron/preload/index.ts',
+  'apps/electron/src/main/**/*.ts',
+  'apps/electron/src/preload/index.ts',
   'packages/shared/**/*.ts'
 ]
 const nodeFiles = [
@@ -20,7 +20,7 @@ const nodeFiles = [
   'apps/web/vite.config.ts',
   'apps/electron/tsdown.config.ts',
   'apps/electron/scripts/**/*.mjs',
-  'apps/electron/main/**/*.ts'
+  'apps/electron/src/main/**/*.ts'
 ]
 
 const tsRecommendedRules = {
@@ -133,7 +133,7 @@ export default [
     }
   },
   {
-    files: ['apps/electron/preload/**/*.ts'],
+    files: ['apps/electron/src/preload/**/*.ts'],
     languageOptions: {
       globals: {
         ...globals.browser,

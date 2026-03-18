@@ -20,6 +20,6 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "vite.config.ts",
-    "../electron/preload/index.d.ts"
+    "../electron/src/preload/index.d.ts"
   ]
 }
