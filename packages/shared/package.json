@@ -1,0 +1,14 @@
+{
+  "name": "@opencopilot/shared",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./protocol": "./src/protocol.ts",
+    "./updater": "./src/updater.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  }
+}

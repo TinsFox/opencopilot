@@ -1,16 +1,12 @@
-appId: com.electron.app
+appId: com.opencopilot.app
 productName: opencopilot
 directories:
   buildResources: build
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
-  - '!electron.vite.config.{js,ts,mjs,cjs}'
-  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
-  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
-  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-asarUnpack:
-  - resources/**
+  - dist/**/*
+  - package.json
+extraMetadata:
+  main: dist/main/index.cjs
 win:
   executableName: opencopilot
 nsis:

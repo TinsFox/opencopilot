@@ -1,0 +1,323 @@
+:root {
+  color-scheme: dark;
+  --bg: #09111f;
+  --bg-elevated: rgba(9, 17, 31, 0.72);
+  --surface: rgba(11, 24, 44, 0.78);
+  --surface-strong: rgba(17, 34, 61, 0.92);
+  --text: #ebf3ff;
+  --muted: #9ab1cf;
+  --line: rgba(159, 186, 230, 0.16);
+  --cyan: #6ae3ff;
+  --lime: #d6ff74;
+  --rose: #ff867a;
+  --amber: #ffc95c;
+  --shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  font-family: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(106, 227, 255, 0.22), transparent 28%),
+    radial-gradient(circle at top right, rgba(214, 255, 116, 0.18), transparent 26%),
+    linear-gradient(180deg, #10203a 0%, var(--bg) 55%, #050912 100%);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 88%);
+}
+
+button {
+  font: inherit;
+}
+
+code,
+.mono-chip,
+.status-pill,
+.version-list strong {
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+}
+
+.app-shell {
+  position: relative;
+  width: min(1120px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 56px 0 72px;
+}
+
+.hero-card,
+.status-card {
+  backdrop-filter: blur(20px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
+  gap: 32px;
+  padding: 36px;
+  border-radius: 28px;
+}
+
+.hero-copy h1 {
+  margin: 0;
+  max-width: 13ch;
+  font-size: clamp(2.6rem, 4vw, 4.5rem);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+}
+
+.eyebrow,
+.card-label {
+  margin: 0 0 12px;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.76rem;
+}
+
+.lede {
+  margin: 20px 0 0;
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.lede code {
+  color: var(--lime);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.primary-action,
+.secondary-action {
+  min-width: 190px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+  cursor: pointer;
+}
+
+.primary-action {
+  color: #05101f;
+  background: linear-gradient(135deg, var(--lime), #9af7ff);
+}
+
+.secondary-action {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.primary-action:hover:not(:disabled),
+.secondary-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.primary-action:disabled,
+.secondary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.hero-badge {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(10, 24, 46, 0.94), rgba(6, 12, 24, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hero-badge img {
+  width: min(180px, 100%);
+  align-self: center;
+  filter: drop-shadow(0 18px 35px rgba(106, 227, 255, 0.2));
+}
+
+.hero-badge span {
+  align-self: flex-start;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--lime);
+  font-family: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.status-card {
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.status-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.accent-card {
+  background:
+    radial-gradient(circle at top right, rgba(255, 201, 92, 0.18), transparent 30%),
+    linear-gradient(180deg, rgba(11, 24, 44, 0.92), rgba(8, 15, 28, 0.9));
+}
+
+.status-pill,
+.mono-chip {
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-idle,
+.status-not-available {
+  color: var(--muted);
+}
+
+.status-checking,
+.status-downloading,
+.status-available {
+  color: var(--amber);
+}
+
+.status-downloaded {
+  color: var(--lime);
+}
+
+.status-error {
+  color: var(--rose);
+}
+
+.status-message {
+  min-height: 72px;
+  margin: 18px 0;
+  color: var(--text);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.status-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.status-meta dt {
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.status-meta dd {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.version-list,
+.check-list {
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.version-list li,
+.check-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.check-list li {
+  display: block;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.version-list li:last-child,
+.check-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+@media (max-width: 980px) {
+  .hero-card,
+  .status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy h1 {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    width: min(100vw - 20px, 1120px);
+    padding: 20px 0 36px;
+  }
+
+  .hero-card,
+  .status-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .primary-action,
+  .secondary-action {
+    width: 100%;
+  }
+
+  .status-meta {
+    grid-template-columns: 1fr;
+  }
+}

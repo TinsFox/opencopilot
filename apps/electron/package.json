@@ -1,0 +1,28 @@
+{
+  "name": "@opencopilot/electron",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/main/index.cjs",
+  "scripts": {
+    "dev": "node ./scripts/dev.mjs",
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "postinstall": "electron-builder install-app-deps",
+    "package:dir": "electron-builder --dir --config electron-builder.yml",
+    "package:win": "electron-builder --win --config electron-builder.yml",
+    "package:mac": "electron-builder --mac --config electron-builder.yml",
+    "package:linux": "electron-builder --linux --config electron-builder.yml"
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/utils": "^4.0.0",
+    "@opencopilot/shared": "workspace:*",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
+    "tsdown": "^0.21.4"
+  }
+}

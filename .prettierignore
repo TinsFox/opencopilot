@@ -3,4 +3,4 @@ dist
 pnpm-lock.yaml
 LICENSE.md
 tsconfig.json
-tsconfig.*.json
+apps/web/src/routeTree.gen.ts

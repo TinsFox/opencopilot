@@ -1,6 +1,6 @@
 # opencopilot
 
-An Electron application with React and TypeScript
+Monorepo for the OpenCopilot desktop app. `apps/electron` owns the Electron runtime, packaging and updates. `apps/web` owns the Vite renderer built with TanStack Router.
 
 ## Recommended IDE Setup
 
@@ -23,12 +23,15 @@ $ pnpm dev
 ### Build
 
 ```bash
-# For windows
+# Build renderer + Electron bundles
+$ pnpm build
+
+# Package for Windows
 $ pnpm build:win
 
-# For macOS
+# Package for macOS
 $ pnpm build:mac
 
-# For Linux
+# Package for Linux
 $ pnpm build:linux
 ```
