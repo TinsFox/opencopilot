@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./bridge": "./src/bridge.ts",
     "./protocol": "./src/protocol.ts",
     "./updater": "./src/updater.ts"
   },

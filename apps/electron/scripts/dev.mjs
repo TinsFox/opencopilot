@@ -9,12 +9,14 @@ const electronDir = path.resolve(scriptsDir, '..')
 const workspaceDir = path.resolve(electronDir, '../..')
 const webDir = path.resolve(workspaceDir, 'apps/web')
 const rendererUrl = 'http://127.0.0.1:5173'
-const distMainEntry = path.resolve(electronDir, 'dist/main/index.cjs')
-const distPreloadEntry = path.resolve(electronDir, 'dist/preload/index.cjs')
+const devDistRoot = path.resolve(electronDir, 'dist-dev')
+const distMainEntry = path.resolve(devDistRoot, 'main/index.cjs')
+const distPreloadEntry = path.resolve(devDistRoot, 'preload/index.cjs')
 
 let electronProcess = null
 let shuttingDown = false
 let restartTimer = null
+let pendingElectronRestart = false
 const childProcesses = new Set()
 const watchers = []
 
@@ -35,6 +37,13 @@ function spawnChild(name, args, options = {}) {
 
     if (child === electronProcess) {
       electronProcess = null
+
+      if (pendingElectronRestart) {
+        pendingElectronRestart = false
+        launchElectron()
+        return
+      }
+
       return
     }
 
@@ -76,14 +85,11 @@ function stopElectron() {
     return
   }
 
-  const runningProcess = electronProcess
-  electronProcess = null
-  runningProcess.kill('SIGTERM')
+  electronProcess.kill('SIGTERM')
 }
 
-function startElectron() {
-  stopElectron()
-  electronProcess = spawnChild('electron', ['exec', 'electron', '.'], {
+function launchElectron() {
+  electronProcess = spawnChild('electron', ['exec', 'electron', distMainEntry], {
     cwd: electronDir,
     env: {
       ...process.env,
@@ -103,7 +109,8 @@ function scheduleElectronRestart() {
 
   restartTimer = setTimeout(() => {
     restartTimer = null
-    startElectron()
+    pendingElectronRestart = true
+    stopElectron()
   }, 150)
 }
 
@@ -157,7 +164,11 @@ async function main() {
   )
 
   spawnChild('tsdown', ['exec', 'tsdown', '--watch'], {
-    cwd: electronDir
+    cwd: electronDir,
+    env: {
+      ...process.env,
+      OPENCOPILOT_ELECTRON_DIST_ROOT: './dist-dev'
+    }
   })
 
   await Promise.all([
@@ -166,7 +177,7 @@ async function main() {
     waitForFile(distPreloadEntry)
   ])
 
-  startElectron()
+  launchElectron()
   watchDirectory(path.dirname(distMainEntry))
   watchDirectory(path.dirname(distPreloadEntry))
 }

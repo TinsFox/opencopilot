@@ -2,19 +2,23 @@ appId: com.opencopilot.app
 productName: opencopilot
 directories:
   buildResources: build
+  output: out
 files:
-  - dist/**/*
+  - dist/main/**/*
+  - dist/preload/**/*
+  - dist/renderer/**/*
   - package.json
 extraMetadata:
   main: dist/main/index.cjs
 win:
   executableName: opencopilot
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${productName}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 mac:
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -23,7 +27,7 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   notarize: false
 dmg:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}-${arch}.${ext}
 linux:
   target:
     - AppImage
@@ -32,10 +36,8 @@ linux:
   maintainer: electronjs.org
   category: Utility
 appImage:
-  artifactName: ${name}-${version}.${ext}
+  artifactName: ${productName}-${version}.${ext}
 npmRebuild: false
 publish:
   provider: generic
   url: https://example.com/auto-updates
-electronDownload:
-  mirror: https://npmmirror.com/mirrors/electron/

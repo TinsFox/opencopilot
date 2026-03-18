@@ -8,7 +8,13 @@
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
   "files.watcherExclude": {
-    "**/apps/web/src/routeTree.gen.ts": true
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
   }
 }

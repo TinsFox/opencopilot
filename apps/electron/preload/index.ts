@@ -1,10 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import type { RendererElectronApi } from '@opencopilot/shared/bridge'
 import {
   updaterChannels,
   type AppUpdaterApi,
   type AppUpdaterStatus
 } from '@opencopilot/shared/updater'
+
+const electronApi: RendererElectronApi = {
+  process: {
+    versions: { ...process.versions }
+  }
+}
 
 const appUpdater: AppUpdaterApi = {
   checkForUpdates: async () => {
@@ -27,15 +33,15 @@ const appUpdater: AppUpdaterApi = {
 }
 
 if (process.contextIsolated) {
-  contextBridge.exposeInMainWorld('electron', electronAPI)
+  contextBridge.exposeInMainWorld('electron', electronApi)
   contextBridge.exposeInMainWorld('appUpdater', appUpdater)
 } else {
   const unsafeWindow = window as Window &
     typeof globalThis & {
-      electron: typeof electronAPI
+      electron: RendererElectronApi
       appUpdater: AppUpdaterApi
     }
 
-  unsafeWindow.electron = electronAPI
+  unsafeWindow.electron = electronApi
   unsafeWindow.appUpdater = appUpdater
 }

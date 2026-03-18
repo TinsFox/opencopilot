@@ -1,10 +1,30 @@
 import path from 'node:path'
 import { app, BrowserWindow, shell } from 'electron'
-import { electronApp, optimizer } from '@electron-toolkit/utils'
 import { getAppEntryUrl, registerAppProtocol } from './protocol'
 import { setupUpdater } from './updater'
 
 const devServerUrl = process.env.OPENCOPILOT_RENDERER_URL
+
+function configureWindowShortcuts(window: BrowserWindow): void {
+  window.webContents.on('before-input-event', (event, input) => {
+    const isReload =
+      (input.control || input.meta) && input.key.toLowerCase() === 'r' && input.type === 'keyDown'
+    const isToggleDevTools = input.key === 'F12' && input.type === 'keyDown'
+
+    if (!devServerUrl && isReload) {
+      event.preventDefault()
+      return
+    }
+
+    if (isToggleDevTools) {
+      if (window.webContents.isDevToolsOpened()) {
+        window.webContents.closeDevTools()
+      } else {
+        window.webContents.openDevTools({ mode: 'right' })
+      }
+    }
+  })
+}
 
 function createWindow(): BrowserWindow {
   const mainWindow = new BrowserWindow({
@@ -34,7 +54,7 @@ function createWindow(): BrowserWindow {
 
   if (devServerUrl) {
     void mainWindow.loadURL(devServerUrl)
-    mainWindow.webContents.openDevTools({ mode: 'right' })
+    // mainWindow.webContents.openDevTools({ mode: 'right' })
   } else {
     void mainWindow.loadURL(getAppEntryUrl())
   }
@@ -43,10 +63,12 @@ function createWindow(): BrowserWindow {
 }
 
 void app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.opencopilot.app')
+  if (process.platform === 'win32') {
+    app.setAppUserModelId('com.opencopilot.app')
+  }
 
   app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+    configureWindowShortcuts(window)
   })
 
   registerAppProtocol()
