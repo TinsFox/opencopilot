@@ -1,4 +1,5 @@
 import path from 'node:path'
+import { existsSync } from 'node:fs'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { updaterChannels, type AppUpdaterStatus } from '@opencopilot/shared/updater'
@@ -23,8 +24,22 @@ function configureDevUpdateFeed(): void {
     return
   }
 
+  const candidatePaths = [
+    path.join(app.getAppPath(), 'dev-app-update.yml'),
+    path.resolve(app.getAppPath(), '..', 'dev-app-update.yml'),
+    path.resolve(app.getAppPath(), '..', '..', 'dev-app-update.yml'),
+    path.resolve(process.cwd(), 'dev-app-update.yml')
+  ]
+  const updateConfigPath = candidatePaths.find((candidatePath) => existsSync(candidatePath))
+
+  if (!updateConfigPath) {
+    throw new Error(
+      `Unable to locate dev-app-update.yml. Checked: ${candidatePaths.join(', ')}`
+    )
+  }
+
   autoUpdater.forceDevUpdateConfig = true
-  autoUpdater.updateConfigPath = path.join(app.getAppPath(), 'dev-app-update.yml')
+  autoUpdater.updateConfigPath = updateConfigPath
 }
 
 async function checkForUpdates(): Promise<void> {
