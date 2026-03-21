@@ -1,263 +1,169 @@
-import { useEffect, useMemo, useState } from 'react'
-import { APP_ENTRY_URL } from '@opencopilot/shared/protocol'
-import type { AppUpdaterStatus } from '@opencopilot/shared/updater'
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button, Card, Chip } from '@heroui/react'
-import electronLogo from '@/assets/electron.svg'
+import { Button, Chip, Surface, TextArea } from '@heroui/react'
+import { ArrowUp, MessageSquarePlus, PanelLeft, Paperclip, Sparkles } from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: HomePage
 })
 
-const initialStatus: AppUpdaterStatus = {
-  state: 'idle',
-  message: 'Ready to check for updates.'
-}
+const starterPrompts = [
+  'Help me plan my next project',
+  'Summarize a long document',
+  'Write and refine content',
+  'Debug a technical problem'
+] as const
 
-const statusTone: Record<
-  AppUpdaterStatus['state'],
-  { chipColor: 'default' | 'accent' | 'success' | 'warning' | 'danger'; label: string }
-> = {
-  idle: { chipColor: 'default', label: 'Idle' },
-  checking: { chipColor: 'accent', label: 'Checking' },
-  available: { chipColor: 'accent', label: 'Update found' },
-  'not-available': { chipColor: 'default', label: 'Up to date' },
-  downloading: { chipColor: 'warning', label: 'Downloading' },
-  downloaded: { chipColor: 'success', label: 'Ready to install' },
-  error: { chipColor: 'danger', label: 'Attention required' }
-}
+const recentChats = [
+  'Launch strategy notes',
+  'Refactor review',
+  'Marketing copy draft',
+  'Desktop onboarding'
+] as const
 
 function HomePage(): React.JSX.Element {
-  const [status, setStatus] = useState<AppUpdaterStatus>(initialStatus)
-  const versions = useMemo(() => window.electron.process.versions, [])
-
-  useEffect(() => {
-    return window.appUpdater.onStatus((nextStatus) => {
-      setStatus(nextStatus)
-    })
-  }, [])
-
-  const canInstall = status.state === 'downloaded'
-  const canCheck = status.state !== 'checking' && status.state !== 'downloading'
-  const tone = statusTone[status.state]
-  const progressValue = status.progress == null ? 8 : Math.max(8, Math.round(status.progress))
+  const [prompt, setPrompt] = useState('')
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(214,115,61,0.22),_transparent_28%),radial-gradient(circle_at_78%_18%,_rgba(84,114,168,0.2),_transparent_24%),linear-gradient(180deg,_oklch(0.985_0.01_75)_0%,_oklch(0.95_0.02_70)_45%,_oklch(0.91_0.03_50)_100%)] text-zinc-900">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-8 px-5 py-6 sm:px-8 lg:px-10 lg:py-10">
-        <section className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.8fr)]">
-          <Card className="relative overflow-hidden border-none bg-[linear-gradient(135deg,rgba(255,250,242,0.94),rgba(243,228,205,0.92))] shadow-[0_30px_80px_-35px_rgba(74,44,19,0.5)]">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,rgba(124,74,33,0.24),transparent_70%)]"
-            />
-            <Card.Content className="relative flex h-full flex-col gap-8 p-6 sm:p-8 lg:p-10">
-              <div className="flex flex-wrap items-center gap-3">
-                <Chip variant="soft" color="accent" className="border border-black/5 bg-white/65">
-                  <Chip.Label>OpenCopilot Desktop</Chip.Label>
-                </Chip>
-                <Chip variant="soft" className="border border-black/5 bg-white/55">
-                  <Chip.Label>Electron + Vite + TanStack Router</Chip.Label>
-                </Chip>
-                <Link
-                  to="/about"
-                  className="ml-auto text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="flex min-h-screen w-full gap-3 p-3">
+        <aside className="hidden w-72 shrink-0 lg:block">
+          <Surface
+            variant="default"
+            className="flex h-full min-h-[calc(100vh-1.5rem)] flex-col rounded-3xl p-3"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <Button className="flex-1 justify-start" onPress={() => setPrompt('')}>
+                <MessageSquarePlus size={18} />
+                New chat
+              </Button>
+              <Button isIconOnly variant="tertiary" aria-label="Collapse sidebar">
+                <PanelLeft size={18} />
+              </Button>
+            </div>
+
+            <div className="mt-5 space-y-1">
+              {recentChats.map((item) => (
+                <Button
+                  key={item}
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onPress={() => setPrompt(item)}
                 >
-                  About Us →
-                </Link>
+                  {item}
+                </Button>
+              ))}
+            </div>
+
+            <div className="mt-auto px-2 pb-1">
+              <p className="text-sm font-medium text-muted">OpenCopilot</p>
+            </div>
+          </Surface>
+        </aside>
+
+        <section className="flex min-w-0 flex-1 flex-col">
+          <Surface
+            variant="default"
+            className="flex min-h-[calc(100vh-1.5rem)] flex-col rounded-3xl px-4 py-3 sm:px-6 sm:py-4"
+          >
+            <header className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Button
+                  isIconOnly
+                  variant="tertiary"
+                  className="lg:hidden"
+                  aria-label="Open sidebar"
+                >
+                  <PanelLeft size={18} />
+                </Button>
+                <Chip variant="soft">
+                  <Chip.Label>OpenCopilot</Chip.Label>
+                </Chip>
+              </div>
+
+              <nav className="flex items-center gap-1">
                 <Link
                   to="/components"
-                  className="text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900"
+                  className="rounded-full px-3 py-2 text-sm font-medium text-muted hover:text-foreground"
                 >
-                  Components →
+                  Components
                 </Link>
+                <Link
+                  to="/about"
+                  className="rounded-full px-3 py-2 text-sm font-medium text-muted hover:text-foreground"
+                >
+                  About
+                </Link>
+              </nav>
+            </header>
+
+            <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center pb-8 pt-10 sm:pb-10">
+              <div className="text-center">
+                <p className="text-sm font-medium text-muted">How can I help?</p>
+                <h1
+                  className="mt-4 text-[clamp(2.5rem,7vw,4.75rem)] font-semibold tracking-tight"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  Start a conversation.
+                </h1>
               </div>
 
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_220px]">
-                <div className="space-y-5">
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-zinc-500">
-                      Local protocol renderer
-                    </p>
-                    <h1 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-zinc-950 sm:text-5xl lg:text-6xl">
-                      Ship the desktop shell from a cleaner HeroUI control surface.
-                    </h1>
-                    <p className="max-w-2xl text-base leading-7 text-zinc-700 sm:text-lg">
-                      The renderer is served through{' '}
-                      <code className="rounded bg-black/6 px-2 py-1 text-[0.95em] text-zinc-900">
-                        {APP_ENTRY_URL}
-                      </code>{' '}
-                      while the updater, runtime metadata, and workspace structure stay visible from
-                      the first screen.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <Button
-                      isPending={status.state === 'checking'}
-                      isDisabled={!canCheck}
-                      size="lg"
-                      className="min-w-44 bg-zinc-950 text-amber-50 shadow-[0_18px_30px_-18px_rgba(24,24,27,0.9)]"
-                      onPress={() => void window.appUpdater.checkForUpdates()}
-                    >
-                      {({ isPending }) =>
-                        isPending ? 'Checking for updates...' : 'Check for updates'
-                      }
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="lg"
-                      isDisabled={!canInstall}
-                      className="min-w-44 border border-black/8 bg-white/70"
-                      onPress={() => void window.appUpdater.quitAndInstall()}
-                    >
-                      Restart to install
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-start lg:justify-end">
-                  <div className="flex w-full max-w-[220px] flex-col items-center gap-4 rounded-[2rem] border border-black/8 bg-white/72 px-6 py-7 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur">
-                    <img
-                      alt="Electron logo"
-                      className="h-16 w-16 drop-shadow-[0_12px_18px_rgba(0,0,0,0.15)]"
-                      src={electronLogo}
-                    />
-                    <div className="space-y-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.26em] text-zinc-500">
-                        Entry URL
-                      </p>
-                      <p className="break-all text-sm font-medium leading-6 text-zinc-900">
-                        {APP_ENTRY_URL}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                {starterPrompts.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setPrompt(item)}
+                    className="rounded-2xl border border-divider bg-content1 px-4 py-4 text-left text-sm text-foreground transition hover:bg-content2"
+                  >
+                    {item}
+                  </button>
+                ))}
               </div>
-            </Card.Content>
-          </Card>
 
-          <Card
-            variant="secondary"
-            className="border-none bg-[linear-gradient(180deg,rgba(50,44,40,0.96),rgba(31,29,28,0.98))] text-stone-50 shadow-[0_30px_80px_-38px_rgba(24,24,27,0.8)]"
-          >
-            <Card.Header className="gap-4 p-6 pb-3 sm:p-7 sm:pb-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <Card.Description className="text-stone-300">Updater channel</Card.Description>
-                  <Card.Title className="mt-1 text-2xl font-semibold tracking-[-0.03em] text-stone-50">
-                    {tone.label}
-                  </Card.Title>
-                </div>
-                <Chip color={tone.chipColor} variant="soft" className="self-start">
-                  <Chip.Label>{status.state}</Chip.Label>
-                </Chip>
-              </div>
-            </Card.Header>
-            <Card.Content className="flex flex-1 flex-col gap-6 p-6 pt-0 sm:p-7 sm:pt-0">
-              <p className="text-sm leading-7 text-stone-300">{status.message}</p>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs uppercase tracking-[0.24em] text-stone-400">
-                  <span>Download progress</span>
-                  <span>
-                    {status.progress == null ? 'Waiting' : `${Math.round(status.progress)}%`}
-                  </span>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full rounded-full bg-[linear-gradient(90deg,rgba(247,198,120,0.96),rgba(230,145,78,0.96))] transition-[width] duration-500 ease-out"
-                    style={{ width: `${progressValue}%` }}
+              <div className="mt-8">
+                <Surface variant="default" className="rounded-[2rem] border border-divider p-3">
+                  <TextArea
+                    aria-label="Message OpenCopilot"
+                    variant="secondary"
+                    rows={4}
+                    value={prompt}
+                    onChange={(event) => setPrompt(event.target.value)}
+                    placeholder="Message OpenCopilot..."
+                    fullWidth
+                    className="w-full"
                   />
-                </div>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="tertiary" size="sm">
+                        <Paperclip size={16} />
+                        Attach
+                      </Button>
+                      <Chip variant="soft">
+                        <Chip.Label>
+                          <span className="inline-flex items-center gap-1">
+                            <Sparkles size={14} />
+                            Smart start
+                          </span>
+                        </Chip.Label>
+                      </Chip>
+                    </div>
+
+                    <Button isIconOnly aria-label="Send message">
+                      <ArrowUp size={16} />
+                    </Button>
+                  </div>
+                </Surface>
               </div>
 
-              <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                <Metric label="Version" value={status.version ?? 'Current release'} />
-                <Metric
-                  label="Install state"
-                  value={canInstall ? 'Restart available' : 'No install queued'}
-                />
-              </dl>
-            </Card.Content>
-          </Card>
-        </section>
-
-        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <Card className="border-none bg-white/72 shadow-[0_18px_50px_-30px_rgba(24,24,27,0.42)] backdrop-blur">
-            <Card.Header className="p-6 pb-4 sm:p-7 sm:pb-5">
-              <Card.Description className="text-zinc-500">Runtime matrix</Card.Description>
-              <Card.Title className="text-2xl font-semibold tracking-[-0.03em] text-zinc-950">
-                Renderer and host versions
-              </Card.Title>
-            </Card.Header>
-            <Card.Content className="p-6 pt-0 sm:p-7 sm:pt-0">
-              <div className="grid gap-3 sm:grid-cols-3">
-                <VersionTile label="Electron" value={versions.electron} />
-                <VersionTile label="Chromium" value={versions.chrome} />
-                <VersionTile label="Node" value={versions.node} />
-              </div>
-            </Card.Content>
-          </Card>
-
-          <Card className="border-none bg-[linear-gradient(180deg,rgba(255,255,255,0.78),rgba(252,246,238,0.88))] shadow-[0_18px_50px_-30px_rgba(24,24,27,0.38)]">
-            <Card.Header className="p-6 pb-4 sm:p-7 sm:pb-5">
-              <Card.Description className="text-zinc-500">Workspace shape</Card.Description>
-              <Card.Title className="text-2xl font-semibold tracking-[-0.03em] text-zinc-950">
-                Monorepo responsibilities
-              </Card.Title>
-            </Card.Header>
-            <Card.Content className="p-6 pt-0 sm:p-7 sm:pt-0">
-              <div className="space-y-3">
-                <ChecklistRow
-                  title="apps/electron"
-                  description="Owns main, preload, packaging, and update orchestration."
-                />
-                <ChecklistRow
-                  title="apps/web"
-                  description="Owns the renderer app, route tree, and the HeroUI surface."
-                />
-                <ChecklistRow
-                  title="Custom dev boot"
-                  description="A Node-based orchestration layer coordinates local startup."
-                />
-              </div>
-            </Card.Content>
-          </Card>
+              <p className="mt-4 text-center text-xs text-muted">
+                OpenCopilot can make mistakes. Check important information.
+              </p>
+            </div>
+          </Surface>
         </section>
       </div>
     </main>
-  )
-}
-
-function Metric(props: { label: string; value: string }): React.JSX.Element {
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-4">
-      <dt className="text-xs uppercase tracking-[0.24em] text-stone-400">{props.label}</dt>
-      <dd className="mt-2 text-sm font-medium text-stone-100">{props.value}</dd>
-    </div>
-  )
-}
-
-function VersionTile(props: { label: string; value: string }): React.JSX.Element {
-  return (
-    <div className="rounded-[1.75rem] border border-black/6 bg-[linear-gradient(180deg,rgba(255,252,247,0.95),rgba(244,236,226,0.78))] p-5">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">
-        {props.label}
-      </p>
-      <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-zinc-950">{props.value}</p>
-    </div>
-  )
-}
-
-function ChecklistRow(props: { title: string; description: string }): React.JSX.Element {
-  return (
-    <div className="flex gap-4 rounded-[1.5rem] border border-black/6 bg-white/60 px-4 py-4">
-      <div className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-[oklch(0.62_0.14_55)]" />
-      <div>
-        <p className="text-sm font-semibold text-zinc-950">{props.title}</p>
-        <p className="mt-1 text-sm leading-6 text-zinc-600">{props.description}</p>
-      </div>
-    </div>
   )
 }
