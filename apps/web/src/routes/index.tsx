@@ -1,7 +1,14 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Button, Chip, Surface, TextArea } from '@heroui/react'
-import { ArrowUp, MessageSquarePlus, PanelLeft, Paperclip, Sparkles } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+import { Button, Chip, Surface, TextArea, Tooltip } from '@heroui/react'
+import {
+  ArrowUp,
+  MessageSquarePlus,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Paperclip,
+  Sparkles
+} from 'lucide-react'
 
 export const Route = createFileRoute('/')({
   component: HomePage
@@ -23,78 +30,70 @@ const recentChats = [
 
 function HomePage(): React.JSX.Element {
   const [prompt, setPrompt] = useState('')
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <div className="flex min-h-screen w-full gap-3 p-3">
-        <aside className="hidden w-72 shrink-0 lg:block">
-          <Surface
-            variant="default"
-            className="flex h-full min-h-[calc(100vh-1.5rem)] flex-col rounded-3xl p-3"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <Button className="flex-1 justify-start" onPress={() => setPrompt('')}>
-                <MessageSquarePlus size={18} />
-                New chat
-              </Button>
-              <Button isIconOnly variant="tertiary" aria-label="Collapse sidebar">
-                <PanelLeft size={18} />
-              </Button>
-            </div>
-
-            <div className="mt-5 space-y-1">
-              {recentChats.map((item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onPress={() => setPrompt(item)}
-                >
-                  {item}
+      <div className="flex min-h-screen w-full gap-3">
+        {isSidebarCollapsed ? null : (
+          <aside className="hidden w-72 shrink-0 lg:block">
+            <Surface
+              variant="default"
+              className="flex h-full min-h-[calc(100vh-1.5rem)] flex-col rounded-md p-3 bg-transparent"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Button className="flex-1 justify-start" onPress={() => setPrompt('')}>
+                  <MessageSquarePlus size={18} />
+                  New chat
                 </Button>
-              ))}
-            </div>
+              </div>
 
-            <div className="mt-auto px-2 pb-1">
-              <p className="text-sm font-medium text-muted">OpenCopilot</p>
-            </div>
-          </Surface>
-        </aside>
+              <div className="mt-5 space-y-1">
+                {recentChats.map((item) => (
+                  <Button
+                    key={item}
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onPress={() => setPrompt(item)}
+                  >
+                    {item}
+                  </Button>
+                ))}
+              </div>
+            </Surface>
+          </aside>
+        )}
 
         <section className="flex min-w-0 flex-1 flex-col">
           <Surface
             variant="default"
-            className="flex min-h-[calc(100vh-1.5rem)] flex-col rounded-3xl px-4 py-3 sm:px-6 sm:py-4"
+            className="flex min-h-[calc(100vh-0rem)] flex-col rounded-md px-4 py-3 sm:px-6 sm:py-4"
           >
             <header className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <Button
-                  isIconOnly
-                  variant="tertiary"
-                  className="lg:hidden"
-                  aria-label="Open sidebar"
-                >
-                  <PanelLeft size={18} />
-                </Button>
-                <Chip variant="soft">
-                  <Chip.Label>OpenCopilot</Chip.Label>
-                </Chip>
+                <Tooltip delay={0}>
+                  <Tooltip.Trigger
+                    aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  >
+                    <Button
+                      isIconOnly
+                      variant="tertiary"
+                      aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                      onPress={() => setSidebarCollapsed((current) => !current)}
+                    >
+                      {isSidebarCollapsed ? (
+                        <PanelLeftOpen size={18} />
+                      ) : (
+                        <PanelLeftClose size={18} />
+                      )}
+                    </Button>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content showArrow>
+                    <Tooltip.Arrow />
+                    <p>{isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</p>
+                  </Tooltip.Content>
+                </Tooltip>
               </div>
-
-              <nav className="flex items-center gap-1">
-                <Link
-                  to="/components"
-                  className="rounded-full px-3 py-2 text-sm font-medium text-muted hover:text-foreground"
-                >
-                  Components
-                </Link>
-                <Link
-                  to="/about"
-                  className="rounded-full px-3 py-2 text-sm font-medium text-muted hover:text-foreground"
-                >
-                  About
-                </Link>
-              </nav>
             </header>
 
             <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center pb-8 pt-10 sm:pb-10">
