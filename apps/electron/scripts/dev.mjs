@@ -157,7 +157,7 @@ process.on('SIGTERM', () => {
 async function main() {
   spawnChild(
     'web',
-    ['--dir', webDir, 'dev', '--', '--host', '127.0.0.1', '--port', '5173', '--strictPort'],
+    ['--dir', webDir, 'dev', '--host', '127.0.0.1', '--port', '5173', '--strictPort'],
     {
       cwd: workspaceDir
     }

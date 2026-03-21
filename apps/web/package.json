@@ -8,11 +8,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@heroui/react": "3.0.0-rc.1",
-    "@heroui/styles": "3.0.0-rc.1",
+    "@heroui/react": "3.0.1",
+    "@heroui/styles": "3.0.1",
     "@opencopilot/shared": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-router": "^1.167.4",
+    "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.2"
