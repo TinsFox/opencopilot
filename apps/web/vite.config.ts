@@ -2,7 +2,7 @@ import path from 'node:path'
 import react from '@vitejs/plugin-react'
 
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-
+import { codeInspectorPlugin } from 'code-inspector-plugin'
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -13,6 +13,9 @@ export default defineConfig({
       autoCodeSplitting: true,
       routesDirectory: './src/routes',
       generatedRouteTree: './src/routeTree.gen.ts'
+    }),
+    codeInspectorPlugin({
+      bundler: 'vite'
     }),
     tailwindcss(),
     react()
