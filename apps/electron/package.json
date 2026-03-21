@@ -20,6 +20,9 @@
     "package:linux": "pnpm build:app && electron-builder --linux --config electron-builder.yml"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.37",
+    "ai": "^6.0.134",
+    "dotenv": "^17.3.1",
     "electron-updater": "^6.8.3"
   },
   "devDependencies": {
