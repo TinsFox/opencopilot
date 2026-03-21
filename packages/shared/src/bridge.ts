@@ -47,7 +47,7 @@ export const chatChannels = {
   streamMessage: 'chat:stream-message',
   streamDelta: 'chat:stream-delta',
   streamDone: 'chat:stream-done',
-  streamError: 'chat:stream-error'
+  streamError: 'chat:stream-error',
 } as const
 
 export interface RendererChatApi {
@@ -58,6 +58,6 @@ export interface RendererChatApi {
       onDelta: (event: ChatStreamDeltaEvent) => void
       onDone: (event: ChatStreamDoneEvent) => void
       onError: (event: ChatStreamErrorEvent) => void
-    }
+    },
   ) => Promise<void>
 }

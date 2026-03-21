@@ -5,5 +5,5 @@ function RootLayout(): React.JSX.Element {
 }
 
 export const Route = createRootRoute({
-  component: RootLayout
+  component: RootLayout,
 })

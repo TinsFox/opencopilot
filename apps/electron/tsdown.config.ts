@@ -1,22 +1,19 @@
 import { builtinModules } from 'node:module'
+
 import { defineConfig } from 'tsdown'
 
 const distRoot = process.env.OPENCOPILOT_ELECTRON_DIST_ROOT ?? './dist'
 const nodeExternals = [
   ...builtinModules,
-  ...builtinModules.map((moduleName) => `node:${moduleName}`)
+  ...builtinModules.map((moduleName) => `node:${moduleName}`),
 ]
-const externals = [
-  'electron',
-  'electron-updater',
-  ...nodeExternals
-]
+const externals = ['electron', 'electron-updater', ...nodeExternals]
 const alwaysBundle = ['@opencopilot/shared']
 
 export default defineConfig([
   {
     entry: {
-      index: './src/main/index.ts'
+      index: './src/main/index.ts',
     },
     outDir: `${distRoot}/main`,
     format: 'cjs',
@@ -27,12 +24,12 @@ export default defineConfig([
     dts: false,
     deps: {
       alwaysBundle,
-      neverBundle: externals
-    }
+      neverBundle: externals,
+    },
   },
   {
     entry: {
-      index: './src/preload/index.ts'
+      index: './src/preload/index.ts',
     },
     outDir: `${distRoot}/preload`,
     format: 'cjs',
@@ -43,7 +40,7 @@ export default defineConfig([
     dts: false,
     deps: {
       alwaysBundle,
-      neverBundle: externals
-    }
-  }
+      neverBundle: externals,
+    },
+  },
 ])

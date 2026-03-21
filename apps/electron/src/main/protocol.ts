@@ -1,13 +1,14 @@
 import { existsSync } from 'node:fs'
 import path, { extname, isAbsolute, relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, net, protocol } from 'electron'
+
 import {
   APP_ASSET_PATH_PREFIX,
   APP_ENTRY_URL,
   APP_HOST,
-  APP_SCHEME
+  APP_SCHEME,
 } from '@opencopilot/shared/protocol'
+import { app, net, protocol } from 'electron'
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -15,9 +16,9 @@ protocol.registerSchemesAsPrivileged([
     privileges: {
       standard: true,
       secure: true,
-      supportFetchAPI: true
-    }
-  }
+      supportFetchAPI: true,
+    },
+  },
 ])
 
 function getRendererDistPath(): string {
@@ -53,7 +54,9 @@ export function registerAppProtocol(): void {
     const filePath = resolve(rendererDistPath, `.${requestedPath}`)
     const relativePath = relative(rendererDistPath, filePath)
     const isSafePath =
-      relativePath.length > 0 && !relativePath.startsWith('..') && !isAbsolute(relativePath)
+      relativePath.length > 0 &&
+      !relativePath.startsWith('..') &&
+      !isAbsolute(relativePath)
 
     if (!isSafePath) {
       return new Response('Bad Request', { status: 400 })

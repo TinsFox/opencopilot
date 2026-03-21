@@ -17,7 +17,7 @@ $ pnpm install
 ### Development
 
 ```bash
-$ cat > apps/electron/.env <<'EOF'
+$ cat > apps/electron/.env << 'EOF'
 ARK_API_KEY=your_volcengine_api_key
 ARK_MODEL=your_doubao_endpoint_or_model_id
 # Optional. Defaults to https://ark.cn-beijing.volces.com/api/v3

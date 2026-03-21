@@ -1,32 +1,32 @@
-import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
 import { Button, Chip, Surface, TextArea, Tooltip } from '@heroui/react'
+import type { ChatMessage } from '@opencopilot/shared/bridge'
+import { createFileRoute } from '@tanstack/react-router'
 import {
   ArrowUp,
   MessageSquarePlus,
   PanelLeftClose,
   PanelLeftOpen,
   Paperclip,
-  Sparkles
+  Sparkles,
 } from 'lucide-react'
-import type { ChatMessage } from '@opencopilot/shared/bridge'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/')({
-  component: HomePage
+  component: HomePage,
 })
 
 const starterPrompts = [
   'Help me plan my next project',
   'Summarize a long document',
   'Write and refine content',
-  'Debug a technical problem'
+  'Debug a technical problem',
 ] as const
 
 const recentChats = [
   'Launch strategy notes',
   'Refactor review',
   'Marketing copy draft',
-  'Desktop onboarding'
+  'Desktop onboarding',
 ] as const
 
 function HomePage(): React.JSX.Element {
@@ -35,6 +35,7 @@ function HomePage(): React.JSX.Element {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [errorMessage, setErrorMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const renderedMessageCounts = new Map<string, number>()
 
   const setStreamingAssistantMessage = (content: string): void => {
     setMessages((currentMessages) => {
@@ -44,7 +45,7 @@ function HomePage(): React.JSX.Element {
       if (lastMessage?.role === 'assistant') {
         nextMessages[nextMessages.length - 1] = {
           ...lastMessage,
-          content
+          content,
         }
         return nextMessages
       }
@@ -61,7 +62,7 @@ function HomePage(): React.JSX.Element {
       if (lastMessage?.role === 'assistant') {
         nextMessages[nextMessages.length - 1] = {
           ...lastMessage,
-          content: `${lastMessage.content}${textDelta}`
+          content: `${lastMessage.content}${textDelta}`,
         }
         return nextMessages
       }
@@ -78,20 +79,23 @@ function HomePage(): React.JSX.Element {
       return
     }
 
-    const nextMessages: ChatMessage[] = [...previousMessages, { role: 'user', content }]
+    const nextMessages: ChatMessage[] = [
+      ...previousMessages,
+      { role: 'user', content },
+    ]
     setPrompt('')
     setErrorMessage('')
     setMessages([...nextMessages, { role: 'assistant', content: '' }])
     setIsSending(true)
     console.info('[chat] renderer sending message', {
       messageCount: nextMessages.length,
-      contentLength: content.length
+      contentLength: content.length,
     })
 
     try {
       await window.opencopilot.chat.streamMessage(
         {
-          messages: nextMessages
+          messages: nextMessages,
         },
         {
           onDelta: (event) => {
@@ -99,7 +103,7 @@ function HomePage(): React.JSX.Element {
           },
           onDone: (event) => {
             console.info('[chat] renderer stream completed', {
-              outputLength: event.text.length
+              outputLength: event.text.length,
             })
             setStreamingAssistantMessage(event.text)
             setIsSending(false)
@@ -109,13 +113,15 @@ function HomePage(): React.JSX.Element {
             setMessages(previousMessages)
             setErrorMessage(event.error)
             setIsSending(false)
-          }
-        }
+          },
+        },
       )
     } catch (error) {
       console.error('[chat] renderer request failed', error)
       setMessages(previousMessages)
-      setErrorMessage(error instanceof Error ? error.message : 'Request failed.')
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Request failed.',
+      )
       setIsSending(false)
     }
   }
@@ -168,12 +174,18 @@ function HomePage(): React.JSX.Element {
               <div className="flex items-center gap-2">
                 <Tooltip delay={0}>
                   <Tooltip.Trigger
-                    aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                    aria-label={
+                      isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'
+                    }
                   >
                     <Button
                       isIconOnly
                       variant="tertiary"
-                      aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                      aria-label={
+                        isSidebarCollapsed
+                          ? 'Expand sidebar'
+                          : 'Collapse sidebar'
+                      }
                       onPress={() => setSidebarCollapsed((current) => !current)}
                     >
                       {isSidebarCollapsed ? (
@@ -185,7 +197,11 @@ function HomePage(): React.JSX.Element {
                   </Tooltip.Trigger>
                   <Tooltip.Content showArrow>
                     <Tooltip.Arrow />
-                    <p>{isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}</p>
+                    <p>
+                      {isSidebarCollapsed
+                        ? 'Expand sidebar'
+                        : 'Collapse sidebar'}
+                    </p>
                   </Tooltip.Content>
                 </Tooltip>
               </div>
@@ -195,7 +211,9 @@ function HomePage(): React.JSX.Element {
               {messages.length === 0 ? (
                 <>
                   <div className="text-center">
-                    <p className="text-sm font-medium text-muted">How can I help?</p>
+                    <p className="text-sm font-medium text-muted">
+                      How can I help?
+                    </p>
                     <h1
                       className="mt-4 text-[clamp(2.5rem,7vw,4.75rem)] font-semibold tracking-tight"
                       style={{ fontFamily: 'var(--font-display)' }}
@@ -219,22 +237,31 @@ function HomePage(): React.JSX.Element {
                 </>
               ) : (
                 <div className="mb-6 space-y-4">
-                  {messages.map((message, index) => (
-                    <Surface
-                      key={`${message.role}-${index}`}
-                      variant="default"
-                      className={`rounded-3xl border border-divider px-5 py-4 ${
-                        message.role === 'user' ? 'ml-auto max-w-3xl bg-content2' : 'max-w-3xl'
-                      }`}
-                    >
-                      <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted">
-                        {message.role}
-                      </p>
-                      <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
-                        {message.content}
-                      </p>
-                    </Surface>
-                  ))}
+                  {messages.map((message) => {
+                    const messageKeyBase = `${message.role}-${message.content}`
+                    const messageCount =
+                      (renderedMessageCounts.get(messageKeyBase) ?? 0) + 1
+                    renderedMessageCounts.set(messageKeyBase, messageCount)
+
+                    return (
+                      <Surface
+                        key={`${messageKeyBase}-${messageCount}`}
+                        variant="default"
+                        className={`rounded-3xl border border-divider px-5 py-4 ${
+                          message.role === 'user'
+                            ? 'ml-auto max-w-3xl bg-content2'
+                            : 'max-w-3xl'
+                        }`}
+                      >
+                        <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-muted">
+                          {message.role}
+                        </p>
+                        <p className="whitespace-pre-wrap text-sm leading-7 text-foreground">
+                          {message.content}
+                        </p>
+                      </Surface>
+                    )
+                  })}
 
                   {errorMessage ? (
                     <p className="text-sm text-danger-600">{errorMessage}</p>
@@ -243,7 +270,10 @@ function HomePage(): React.JSX.Element {
               )}
 
               <div className="mt-8">
-                <Surface variant="default" className="rounded-[2rem] border border-divider p-3">
+                <Surface
+                  variant="default"
+                  className="rounded-[2rem] border border-divider p-3"
+                >
                   <TextArea
                     aria-label="Message OpenCopilot"
                     variant="secondary"
@@ -254,7 +284,10 @@ function HomePage(): React.JSX.Element {
                     fullWidth
                     className="w-full"
                     onKeyDown={(event) => {
-                      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+                      if (
+                        (event.metaKey || event.ctrlKey) &&
+                        event.key === 'Enter'
+                      ) {
                         event.preventDefault()
                         void handleSend()
                       }
@@ -290,8 +323,8 @@ function HomePage(): React.JSX.Element {
               </div>
 
               <p className="mt-4 text-center text-xs text-muted">
-                OpenCopilot can make mistakes. Check important information. Press Ctrl or Cmd + Enter
-                to send.
+                OpenCopilot can make mistakes. Check important information.
+                Press Ctrl or Cmd + Enter to send.
               </p>
             </div>
           </Surface>

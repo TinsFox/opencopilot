@@ -25,7 +25,7 @@ function spawnChild(name, args, options = {}) {
     cwd: options.cwd,
     env: options.env ?? process.env,
     stdio: 'inherit',
-    shell: process.platform === 'win32'
+    shell: process.platform === 'win32',
   })
 
   child.on('exit', (code, signal) => {
@@ -47,7 +47,9 @@ function spawnChild(name, args, options = {}) {
       return
     }
 
-    console.error(`[dev] ${name} exited with code ${code ?? 'null'} signal ${signal ?? 'null'}`)
+    console.error(
+      `[dev] ${name} exited with code ${code ?? 'null'} signal ${signal ?? 'null'}`,
+    )
     shutdown(code ?? 1)
   })
 
@@ -89,13 +91,17 @@ function stopElectron() {
 }
 
 function launchElectron() {
-  electronProcess = spawnChild('electron', ['exec', 'electron', distMainEntry], {
-    cwd: electronDir,
-    env: {
-      ...process.env,
-      OPENCOPILOT_RENDERER_URL: rendererUrl
-    }
-  })
+  electronProcess = spawnChild(
+    'electron',
+    ['exec', 'electron', distMainEntry],
+    {
+      cwd: electronDir,
+      env: {
+        ...process.env,
+        OPENCOPILOT_RENDERER_URL: rendererUrl,
+      },
+    },
+  )
 }
 
 function scheduleElectronRestart() {
@@ -144,37 +150,46 @@ async function shutdown(exitCode = 0) {
   }
 
   await wait(100)
-  process.exit(exitCode)
+  process.exitCode = exitCode
 }
 
 process.on('SIGINT', () => {
-  shutdown(0)
+  void shutdown(0)
 })
 process.on('SIGTERM', () => {
-  shutdown(0)
+  void shutdown(0)
 })
 
 async function main() {
   spawnChild(
     'web',
-    ['--dir', webDir, 'dev', '--host', '127.0.0.1', '--port', '5173', '--strictPort'],
+    [
+      '--dir',
+      webDir,
+      'dev',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      '5173',
+      '--strictPort',
+    ],
     {
-      cwd: workspaceDir
-    }
+      cwd: workspaceDir,
+    },
   )
 
   spawnChild('tsdown', ['exec', 'tsdown', '--watch'], {
     cwd: electronDir,
     env: {
       ...process.env,
-      OPENCOPILOT_ELECTRON_DIST_ROOT: './dist-dev'
-    }
+      OPENCOPILOT_ELECTRON_DIST_ROOT: './dist-dev',
+    },
   })
 
   await Promise.all([
     waitForServer(rendererUrl),
     waitForFile(distMainEntry),
-    waitForFile(distPreloadEntry)
+    waitForFile(distPreloadEntry),
   ])
 
   launchElectron()
@@ -184,5 +199,5 @@ async function main() {
 
 main().catch((error) => {
   console.error(error)
-  shutdown(1)
+  void shutdown(1)
 })

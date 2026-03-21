@@ -1,15 +1,18 @@
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
-import dotenv from 'dotenv'
-import { generateText, streamText, type ModelMessage } from 'ai'
+
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
-import {
-  chatChannels,
-  type ChatRequest,
-  type ChatResponse,
-  type ChatStreamRequest
+import type {
+  ChatRequest,
+  ChatResponse,
+  ChatStreamRequest,
 } from '@opencopilot/shared/bridge'
+import { chatChannels } from '@opencopilot/shared/bridge'
+import type { ModelMessage } from 'ai'
+import { generateText, streamText } from 'ai'
+import dotenv from 'dotenv'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
+
 import { getAppEntryUrl, registerAppProtocol } from './protocol'
 import { setupUpdater } from './updater'
 
@@ -18,7 +21,7 @@ function loadEnvironment(): void {
     path.resolve(process.cwd(), '.env.local'),
     path.resolve(process.cwd(), '.env'),
     path.resolve(path.dirname(process.execPath), '.env.local'),
-    path.resolve(path.dirname(process.execPath), '.env')
+    path.resolve(path.dirname(process.execPath), '.env'),
   ]
 
   for (const envPath of candidatePaths) {
@@ -34,10 +37,14 @@ loadEnvironment()
 
 const devServerUrl = process.env.OPENCOPILOT_RENDERER_URL
 const arkApiKey = process.env.ARK_API_KEY
-const arkBaseUrl = process.env.ARK_BASE_URL ?? 'https://ark.cn-beijing.volces.com/api/v3'
+const arkBaseUrl =
+  process.env.ARK_BASE_URL ?? 'https://ark.cn-beijing.volces.com/api/v3'
 const arkModel = process.env.ARK_MODEL
 
-function logChatEvent(message: string, details?: Record<string, unknown>): void {
+function logChatEvent(
+  message: string,
+  details?: Record<string, unknown>,
+): void {
   if (details) {
     console.info(`[chat] ${message}`, details)
     return
@@ -49,13 +56,15 @@ function logChatEvent(message: string, details?: Record<string, unknown>): void 
 const doubaoProvider = createOpenAICompatible({
   name: 'doubao',
   apiKey: arkApiKey,
-  baseURL: arkBaseUrl
+  baseURL: arkBaseUrl,
 })
 
 function configureWindowShortcuts(window: BrowserWindow): void {
   window.webContents.on('before-input-event', (event, input) => {
     const isReload =
-      (input.control || input.meta) && input.key.toLowerCase() === 'r' && input.type === 'keyDown'
+      (input.control || input.meta) &&
+      input.key.toLowerCase() === 'r' &&
+      input.type === 'keyDown'
     const isToggleDevTools = input.key === 'F12' && input.type === 'keyDown'
 
     if (!devServerUrl && isReload) {
@@ -86,8 +95,8 @@ function createWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.cjs'),
       sandbox: false,
       contextIsolation: true,
-      nodeIntegration: false
-    }
+      nodeIntegration: false,
+    },
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -117,13 +126,15 @@ function normalizeMessages(request: ChatRequest): ModelMessage[] {
 
   if (!arkModel) {
     logChatEvent('request rejected: missing ARK_MODEL')
-    throw new Error('Missing ARK_MODEL environment variable. Use your Doubao model or endpoint ID.')
+    throw new Error(
+      'Missing ARK_MODEL environment variable. Use your Doubao model or endpoint ID.',
+    )
   }
 
   const messages = request.messages
     .map((message) => ({
       role: message.role,
-      content: message.content.trim()
+      content: message.content.trim(),
     }))
     .filter((message) => message.content.length > 0) as ModelMessage[]
 
@@ -137,10 +148,10 @@ function normalizeMessages(request: ChatRequest): ModelMessage[] {
 
 async function handleChatRequest(
   _event: Electron.IpcMainInvokeEvent,
-  request: ChatRequest
+  request: ChatRequest,
 ): Promise<ChatResponse> {
   logChatEvent('IPC request received', {
-    messageCount: request.messages.length
+    messageCount: request.messages.length,
   })
 
   const messages = normalizeMessages(request)
@@ -153,23 +164,25 @@ async function handleChatRequest(
     messageCount: messages.length,
     lastRole: lastMessage?.role,
     lastContentLength:
-      typeof lastMessage?.content === 'string' ? lastMessage.content.length : undefined
+      typeof lastMessage?.content === 'string'
+        ? lastMessage.content.length
+        : undefined,
   })
 
   try {
     const { text } = await generateText({
       model: doubaoProvider.chatModel(model),
-      messages
+      messages,
     })
 
     logChatEvent('response received from Doubao', {
-      outputLength: text.length
+      outputLength: text.length,
     })
 
     return { text }
   } catch (error) {
     logChatEvent('request failed', {
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     })
     throw error
   }
@@ -177,11 +190,11 @@ async function handleChatRequest(
 
 async function handleChatStreamRequest(
   event: Electron.IpcMainInvokeEvent,
-  request: ChatStreamRequest
+  request: ChatStreamRequest,
 ): Promise<void> {
   logChatEvent('stream IPC request received', {
     requestId: request.requestId,
-    messageCount: request.messages.length
+    messageCount: request.messages.length,
   })
 
   const messages = normalizeMessages(request)
@@ -194,10 +207,12 @@ async function handleChatStreamRequest(
     messageCount: messages.length,
     lastRole: lastMessage?.role,
     lastContentLength:
-      typeof lastMessage?.content === 'string' ? lastMessage.content.length : undefined
+      typeof lastMessage?.content === 'string'
+        ? lastMessage.content.length
+        : undefined,
   })
 
-  const sender = event.sender
+  const { sender } = event
 
   void (async () => {
     let text = ''
@@ -205,7 +220,7 @@ async function handleChatStreamRequest(
     try {
       const result = streamText({
         model: doubaoProvider.chatModel(model),
-        messages
+        messages,
       })
 
       for await (const part of result.fullStream) {
@@ -216,30 +231,30 @@ async function handleChatStreamRequest(
         text += part.text
         sender.send(chatChannels.streamDelta, {
           requestId: request.requestId,
-          textDelta: part.text
+          textDelta: part.text,
         })
       }
 
       sender.send(chatChannels.streamDone, {
         requestId: request.requestId,
-        text
+        text,
       })
 
       logChatEvent('stream completed', {
         requestId: request.requestId,
-        outputLength: text.length
+        outputLength: text.length,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
 
       sender.send(chatChannels.streamError, {
         requestId: request.requestId,
-        error: message
+        error: message,
       })
 
       logChatEvent('stream failed', {
         requestId: request.requestId,
-        error: message
+        error: message,
       })
     }
   })()
@@ -260,7 +275,7 @@ void app.whenReady().then(() => {
   logChatEvent('chat handler registered', {
     model: arkModel ?? null,
     baseUrl: arkBaseUrl,
-    hasApiKey: Boolean(arkApiKey)
+    hasApiKey: Boolean(arkApiKey),
   })
   createWindow()
   setupUpdater()

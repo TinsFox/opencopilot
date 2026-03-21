@@ -1,8 +1,8 @@
 {
   "name": "@opencopilot/shared",
-  "private": true,
-  "version": "1.0.0",
   "type": "module",
+  "version": "1.0.0",
+  "private": true,
   "sideEffects": false,
   "exports": {
     "./bridge": "./src/bridge.ts",

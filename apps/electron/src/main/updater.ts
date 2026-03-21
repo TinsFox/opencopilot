@@ -1,12 +1,14 @@
-import path from 'node:path'
 import { existsSync } from 'node:fs'
+import path from 'node:path'
+
+import type { AppUpdaterStatus } from '@opencopilot/shared/updater'
+import { updaterChannels } from '@opencopilot/shared/updater'
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { updaterChannels, type AppUpdaterStatus } from '@opencopilot/shared/updater'
 
 let currentStatus: AppUpdaterStatus = {
   state: 'idle',
-  message: 'Ready to check for updates.'
+  message: 'Ready to check for updates.',
 }
 let canInstallUpdate = false
 let updaterInitialized = false
@@ -28,13 +30,15 @@ function configureDevUpdateFeed(): void {
     path.join(app.getAppPath(), 'dev-app-update.yml'),
     path.resolve(app.getAppPath(), '..', 'dev-app-update.yml'),
     path.resolve(app.getAppPath(), '..', '..', 'dev-app-update.yml'),
-    path.resolve(process.cwd(), 'dev-app-update.yml')
+    path.resolve(process.cwd(), 'dev-app-update.yml'),
   ]
-  const updateConfigPath = candidatePaths.find((candidatePath) => existsSync(candidatePath))
+  const updateConfigPath = candidatePaths.find((candidatePath) =>
+    existsSync(candidatePath),
+  )
 
   if (!updateConfigPath) {
     throw new Error(
-      `Unable to locate dev-app-update.yml. Checked: ${candidatePaths.join(', ')}`
+      `Unable to locate dev-app-update.yml. Checked: ${candidatePaths.join(', ')}`,
     )
   }
 
@@ -46,7 +50,7 @@ async function checkForUpdates(): Promise<void> {
   canInstallUpdate = false
   broadcastStatus({
     state: 'checking',
-    message: 'Checking for updates.'
+    message: 'Checking for updates.',
   })
 
   await autoUpdater.checkForUpdates()
@@ -65,7 +69,7 @@ export function setupUpdater(): void {
   autoUpdater.on('checking-for-update', () => {
     broadcastStatus({
       state: 'checking',
-      message: 'Checking for updates.'
+      message: 'Checking for updates.',
     })
   })
 
@@ -73,7 +77,7 @@ export function setupUpdater(): void {
     broadcastStatus({
       state: 'available',
       message: `Update ${info.version} is available. Downloading now.`,
-      version: info.version
+      version: info.version,
     })
   })
 
@@ -81,7 +85,7 @@ export function setupUpdater(): void {
     broadcastStatus({
       state: 'not-available',
       message: 'You already have the latest version.',
-      version: info.version
+      version: info.version,
     })
   })
 
@@ -91,7 +95,7 @@ export function setupUpdater(): void {
       message: `Downloading update: ${Math.round(progress.percent)}%.`,
       progress: progress.percent,
       transferredBytes: progress.transferred,
-      totalBytes: progress.total
+      totalBytes: progress.total,
     })
   })
 
@@ -101,14 +105,14 @@ export function setupUpdater(): void {
       state: 'downloaded',
       message: `Update ${info.version} downloaded. Restart to install.`,
       version: info.version,
-      progress: 100
+      progress: 100,
     })
   })
 
   autoUpdater.on('error', (error) => {
     broadcastStatus({
       state: 'error',
-      message: error?.message ?? 'Update failed.'
+      message: error?.message ?? 'Update failed.',
     })
   })
 
@@ -121,7 +125,7 @@ export function setupUpdater(): void {
       broadcastStatus({
         ...currentStatus,
         state: 'error',
-        message: 'No downloaded update is ready to install.'
+        message: 'No downloaded update is ready to install.',
       })
       return
     }

@@ -1,22 +1,22 @@
-import { contextBridge, ipcRenderer } from 'electron'
 import type {
   ChatStreamDeltaEvent,
   ChatStreamDoneEvent,
   ChatStreamErrorEvent,
   RendererChatApi,
-  RendererElectronApi
+  RendererElectronApi,
 } from '@opencopilot/shared/bridge'
 import { chatChannels } from '@opencopilot/shared/bridge'
-import {
-  updaterChannels,
-  type AppUpdaterApi,
-  type AppUpdaterStatus
+import type {
+  AppUpdaterApi,
+  AppUpdaterStatus,
 } from '@opencopilot/shared/updater'
+import { updaterChannels } from '@opencopilot/shared/updater'
+import { contextBridge, ipcRenderer } from 'electron'
 
 const electronApi: RendererElectronApi = {
   process: {
-    versions: { ...process.versions }
-  }
+    versions: { ...process.versions },
+  },
 }
 
 const appUpdater: AppUpdaterApi = {
@@ -27,7 +27,10 @@ const appUpdater: AppUpdaterApi = {
     await ipcRenderer.invoke(updaterChannels.quitAndInstall)
   },
   onStatus: (listener): (() => void) => {
-    const subscription = (_event: Electron.IpcRendererEvent, status: AppUpdaterStatus): void => {
+    const subscription = (
+      _event: Electron.IpcRendererEvent,
+      status: AppUpdaterStatus,
+    ): void => {
       listener(status)
     }
 
@@ -36,11 +39,12 @@ const appUpdater: AppUpdaterApi = {
     return () => {
       ipcRenderer.off(updaterChannels.status, subscription)
     }
-  }
+  },
 }
 
 const chatApi: RendererChatApi = {
-  sendMessage: async (request) => ipcRenderer.invoke(chatChannels.sendMessage, request),
+  sendMessage: async (request) =>
+    ipcRenderer.invoke(chatChannels.sendMessage, request),
   streamMessage: async (request, listener) => {
     const requestId =
       globalThis.crypto?.randomUUID?.() ??
@@ -48,14 +52,17 @@ const chatApi: RendererChatApi = {
 
     const handleDelta = (
       _event: Electron.IpcRendererEvent,
-      event: ChatStreamDeltaEvent
+      event: ChatStreamDeltaEvent,
     ): void => {
       if (event.requestId === requestId) {
         listener.onDelta(event)
       }
     }
 
-    const handleDone = (_event: Electron.IpcRendererEvent, event: ChatStreamDoneEvent): void => {
+    const handleDone = (
+      _event: Electron.IpcRendererEvent,
+      event: ChatStreamDoneEvent,
+    ): void => {
       if (event.requestId !== requestId) {
         return
       }
@@ -66,7 +73,7 @@ const chatApi: RendererChatApi = {
 
     const handleError = (
       _event: Electron.IpcRendererEvent,
-      event: ChatStreamErrorEvent
+      event: ChatStreamErrorEvent,
     ): void => {
       if (event.requestId !== requestId) {
         return
@@ -89,20 +96,20 @@ const chatApi: RendererChatApi = {
     try {
       await ipcRenderer.invoke(chatChannels.streamMessage, {
         ...request,
-        requestId
+        requestId,
       })
     } catch (error) {
       cleanup()
       throw error
     }
-  }
+  },
 }
 
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('electron', electronApi)
   contextBridge.exposeInMainWorld('appUpdater', appUpdater)
   contextBridge.exposeInMainWorld('opencopilot', {
-    chat: chatApi
+    chat: chatApi,
   })
 } else {
   const unsafeWindow = window as Window &
@@ -117,6 +124,6 @@ if (process.contextIsolated) {
   unsafeWindow.electron = electronApi
   unsafeWindow.appUpdater = appUpdater
   unsafeWindow.opencopilot = {
-    chat: chatApi
+    chat: chatApi,
   }
 }

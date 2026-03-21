@@ -1,11 +1,11 @@
 {
   "name": "@opencopilot/web",
-  "private": true,
-  "version": "1.0.0",
   "type": "module",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
-    "dev": "vite",
     "build": "vite build",
+    "dev": "vite",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

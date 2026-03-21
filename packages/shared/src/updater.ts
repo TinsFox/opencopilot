@@ -1,7 +1,7 @@
 export const updaterChannels = {
   checkForUpdates: 'app-updater:check-for-updates',
   quitAndInstall: 'app-updater:quit-and-install',
-  status: 'app-updater:status'
+  status: 'app-updater:status',
 } as const
 
 export type AppUpdaterState =
