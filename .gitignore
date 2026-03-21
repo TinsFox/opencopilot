@@ -8,4 +8,5 @@ apps/electron/dist
 apps/electron/dist-dev
 apps/electron/.env
 apps/electron/.env.local
+*.db
 .tanstack

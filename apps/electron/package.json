@@ -11,6 +11,9 @@
   "scripts": {
     "build": "tsdown",
     "build:app": "pnpm --dir ../web build && pnpm build",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
     "dev": "node ./scripts/dev.mjs",
     "postinstall": "electron-builder install-app-deps",
     "package:dir": "pnpm build:app && electron-builder --dir --config electron-builder.yml",
@@ -21,12 +24,15 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.37",
+    "@libsql/client": "^0.17.2",
     "ai": "^6.0.134",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.44.7",
     "electron-updater": "^6.8.3"
   },
   "devDependencies": {
     "@opencopilot/shared": "workspace:*",
+    "drizzle-kit": "^0.31.10",
     "electron": "^41.0.3",
     "electron-builder": "^26.8.1",
     "tsdown": "^0.21.4"

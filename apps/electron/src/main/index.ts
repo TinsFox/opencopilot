@@ -13,6 +13,7 @@ import { generateText, streamText } from 'ai'
 import dotenv from 'dotenv'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 
+import { getDatabaseFilePath, initializeDatabase } from './db'
 import { getAppEntryUrl, registerAppProtocol } from './protocol'
 import { setupUpdater } from './updater'
 
@@ -116,6 +117,15 @@ function createWindow(): BrowserWindow {
   }
 
   return mainWindow
+}
+
+function getDefaultDatabaseUrl(): string {
+  const isDevelopment = Boolean(devServerUrl) || !app.isPackaged
+  const databaseFileName = isDevelopment
+    ? 'opencopilot.dev.db'
+    : 'opencopilot.db'
+
+  return `file:${path.join(app.getPath('userData'), databaseFileName)}`
 }
 
 function normalizeMessages(request: ChatRequest): ModelMessage[] {
@@ -260,10 +270,16 @@ async function handleChatStreamRequest(
   })()
 }
 
-void app.whenReady().then(() => {
+void app.whenReady().then(async () => {
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.opencopilot.app')
   }
+
+  const dbFileName = process.env.DB_FILE_NAME ?? getDefaultDatabaseUrl()
+  await initializeDatabase(dbFileName)
+  console.info('[db] initialized', {
+    filePath: getDatabaseFilePath(),
+  })
 
   app.on('browser-window-created', (_, window) => {
     configureWindowShortcuts(window)
