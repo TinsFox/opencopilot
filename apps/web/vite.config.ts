@@ -1,10 +1,9 @@
-import path from 'node:path'
-
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import { codeInspectorPlugin } from 'code-inspector-plugin'
 import { defineConfig } from 'vite'
+import tsconfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig({
   plugins: [
@@ -16,15 +15,16 @@ export default defineConfig({
     }),
     codeInspectorPlugin({
       bundler: 'vite',
+      exclude: [
+        /src\/components\/ui\//,
+        /node_modules/,
+        /src\/components\/ai-elements\//,
+      ],
     }),
     tailwindcss(),
     react(),
+    tsconfigPaths(),
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
   server: {
     host: '127.0.0.1',
     port: 5173,
