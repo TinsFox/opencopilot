@@ -4,8 +4,12 @@ import type {
   ChatStreamErrorEvent,
   RendererChatApi,
   RendererElectronApi,
+  RendererProviderApi,
 } from '@opencopilot/shared/bridge'
-import { chatChannels } from '@opencopilot/shared/bridge'
+import {
+  chatChannels,
+  providerChannels,
+} from '@opencopilot/shared/bridge'
 import type {
   AppUpdaterApi,
   AppUpdaterStatus,
@@ -105,11 +109,32 @@ const chatApi: RendererChatApi = {
   },
 }
 
+const providersApi: RendererProviderApi = {
+  createProvider: async (request) =>
+    ipcRenderer.invoke(providerChannels.createProvider, request),
+  testConnection: async (request) =>
+    ipcRenderer.invoke(providerChannels.testConnection, request),
+  getBootstrapState: async () =>
+    ipcRenderer.invoke(providerChannels.getBootstrapState),
+  listProviders: async () => ipcRenderer.invoke(providerChannels.listProviders),
+  setProviderEnabled: async (providerId, enabled) =>
+    ipcRenderer.invoke(providerChannels.setProviderEnabled, {
+      providerId,
+      enabled,
+    }),
+  setModelEnabled: async (modelId, enabled) =>
+    ipcRenderer.invoke(providerChannels.setModelEnabled, {
+      modelId,
+      enabled,
+    }),
+}
+
 if (process.contextIsolated) {
   contextBridge.exposeInMainWorld('electron', electronApi)
   contextBridge.exposeInMainWorld('appUpdater', appUpdater)
   contextBridge.exposeInMainWorld('opencopilot', {
     chat: chatApi,
+    providers: providersApi,
   })
 } else {
   const unsafeWindow = window as Window &
@@ -118,6 +143,7 @@ if (process.contextIsolated) {
       appUpdater: AppUpdaterApi
       opencopilot: {
         chat: RendererChatApi
+        providers: RendererProviderApi
       }
     }
 
@@ -125,5 +151,6 @@ if (process.contextIsolated) {
   unsafeWindow.appUpdater = appUpdater
   unsafeWindow.opencopilot = {
     chat: chatApi,
+    providers: providersApi,
   }
 }

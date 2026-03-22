@@ -5,3 +5,5 @@ pnpm-lock.yaml
 LICENSE.md
 tsconfig.json
 apps/web/src/routeTree.gen.ts
+apps/web/src/components/ui
+apps/web/src/components/ai-elements

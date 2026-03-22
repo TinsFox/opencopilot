@@ -8,7 +8,7 @@ import { autoUpdater } from 'electron-updater'
 
 let currentStatus: AppUpdaterStatus = {
   state: 'idle',
-  message: 'Ready to check for updates.',
+  message: '可以开始检查更新。',
 }
 let canInstallUpdate = false
 let updaterInitialized = false
@@ -46,11 +46,11 @@ function configureDevUpdateFeed(): void {
   autoUpdater.updateConfigPath = updateConfigPath
 }
 
-async function checkForUpdates(): Promise<void> {
+export async function checkForUpdates(): Promise<void> {
   canInstallUpdate = false
   broadcastStatus({
     state: 'checking',
-    message: 'Checking for updates.',
+    message: '正在检查更新。',
   })
 
   await autoUpdater.checkForUpdates()
@@ -69,14 +69,14 @@ export function setupUpdater(): void {
   autoUpdater.on('checking-for-update', () => {
     broadcastStatus({
       state: 'checking',
-      message: 'Checking for updates.',
+      message: '正在检查更新。',
     })
   })
 
   autoUpdater.on('update-available', (info) => {
     broadcastStatus({
       state: 'available',
-      message: `Update ${info.version} is available. Downloading now.`,
+      message: `发现新版本 ${info.version}，正在下载。`,
       version: info.version,
     })
   })
@@ -84,7 +84,7 @@ export function setupUpdater(): void {
   autoUpdater.on('update-not-available', (info) => {
     broadcastStatus({
       state: 'not-available',
-      message: 'You already have the latest version.',
+      message: '当前已经是最新版本。',
       version: info.version,
     })
   })
@@ -92,7 +92,7 @@ export function setupUpdater(): void {
   autoUpdater.on('download-progress', (progress) => {
     broadcastStatus({
       state: 'downloading',
-      message: `Downloading update: ${Math.round(progress.percent)}%.`,
+      message: `正在下载更新：${Math.round(progress.percent)}%。`,
       progress: progress.percent,
       transferredBytes: progress.transferred,
       totalBytes: progress.total,
@@ -103,7 +103,7 @@ export function setupUpdater(): void {
     canInstallUpdate = true
     broadcastStatus({
       state: 'downloaded',
-      message: `Update ${info.version} downloaded. Restart to install.`,
+      message: `版本 ${info.version} 已下载完成，重启后即可安装。`,
       version: info.version,
       progress: 100,
     })
@@ -112,7 +112,7 @@ export function setupUpdater(): void {
   autoUpdater.on('error', (error) => {
     broadcastStatus({
       state: 'error',
-      message: error?.message ?? 'Update failed.',
+      message: error?.message ?? '更新失败。',
     })
   })
 
@@ -125,7 +125,7 @@ export function setupUpdater(): void {
       broadcastStatus({
         ...currentStatus,
         state: 'error',
-        message: 'No downloaded update is ready to install.',
+        message: '没有可安装的已下载更新。',
       })
       return
     }

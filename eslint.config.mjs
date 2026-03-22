@@ -3,7 +3,13 @@ import { defineConfig } from 'eslint-config-hyoban'
 
 export default defineConfig(
   {
-    ignores: ['.agents/**', '**/routeTree.gen.ts', 'pnpm-lock.yaml'],
+    ignores: [
+      '.agents/**',
+      '**/routeTree.gen.ts',
+      'pnpm-lock.yaml',
+      'apps/web/src/components/ui',
+      'apps/web/src/components/ai-elements',
+    ],
     formatting: false,
     lessOpinionated: true,
     preferESM: false,

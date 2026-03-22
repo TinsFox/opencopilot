@@ -1,46 +1,33 @@
-import { existsSync } from 'node:fs'
 import path from 'node:path'
 
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type {
   ChatRequest,
-  ChatResponse,
   ChatStreamRequest,
+  CreateProviderRequest,
 } from '@opencopilot/shared/bridge'
-import { chatChannels } from '@opencopilot/shared/bridge'
-import type { ModelMessage } from 'ai'
-import { generateText, streamText } from 'ai'
-import dotenv from 'dotenv'
+import {
+  chatChannels,
+  providerChannels,
+} from '@opencopilot/shared/bridge'
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 
+import { generateChatResponse, startChatStream } from './chat/chat-service'
 import { getDatabaseFilePath, initializeDatabase } from './db'
+import { createAppMenu } from './menu'
 import { getAppEntryUrl, registerAppProtocol } from './protocol'
+import {
+  createProvider,
+  testProviderConnection,
+} from './providers/provider-service'
+import {
+  getBootstrapState,
+  listProviders,
+  setModelEnabled,
+  setProviderEnabled,
+} from './providers/repository'
 import { setupUpdater } from './updater'
 
-function loadEnvironment(): void {
-  const candidatePaths = [
-    path.resolve(process.cwd(), '.env.local'),
-    path.resolve(process.cwd(), '.env'),
-    path.resolve(path.dirname(process.execPath), '.env.local'),
-    path.resolve(path.dirname(process.execPath), '.env'),
-  ]
-
-  for (const envPath of candidatePaths) {
-    if (!existsSync(envPath)) {
-      continue
-    }
-
-    dotenv.config({ path: envPath, override: false })
-  }
-}
-
-loadEnvironment()
-
 const devServerUrl = process.env.OPENCOPILOT_RENDERER_URL
-const arkApiKey = process.env.ARK_API_KEY
-const arkBaseUrl =
-  process.env.ARK_BASE_URL ?? 'https://ark.cn-beijing.volces.com/api/v3'
-const arkModel = process.env.ARK_MODEL
 
 function logChatEvent(
   message: string,
@@ -53,12 +40,6 @@ function logChatEvent(
 
   console.info(`[chat] ${message}`)
 }
-
-const doubaoProvider = createOpenAICompatible({
-  name: 'doubao',
-  apiKey: arkApiKey,
-  baseURL: arkBaseUrl,
-})
 
 function configureWindowShortcuts(window: BrowserWindow): void {
   window.webContents.on('before-input-event', (event, input) => {
@@ -90,7 +71,7 @@ function createWindow(): BrowserWindow {
     minWidth: 1080,
     minHeight: 720,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     title: 'OpenCopilot',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.cjs'),
@@ -111,14 +92,12 @@ function createWindow(): BrowserWindow {
 
   if (devServerUrl) {
     void mainWindow.loadURL(devServerUrl)
-    // mainWindow.webContents.openDevTools({ mode: 'right' })
   } else {
     void mainWindow.loadURL(getAppEntryUrl())
   }
 
   return mainWindow
 }
-
 function getDefaultDatabaseUrl(): string {
   const isDevelopment = Boolean(devServerUrl) || !app.isPackaged
   const databaseFileName = isDevelopment
@@ -128,74 +107,17 @@ function getDefaultDatabaseUrl(): string {
   return `file:${path.join(app.getPath('userData'), databaseFileName)}`
 }
 
-function normalizeMessages(request: ChatRequest): ModelMessage[] {
-  if (!arkApiKey) {
-    logChatEvent('request rejected: missing ARK_API_KEY')
-    throw new Error('Missing ARK_API_KEY environment variable.')
-  }
-
-  if (!arkModel) {
-    logChatEvent('request rejected: missing ARK_MODEL')
-    throw new Error(
-      'Missing ARK_MODEL environment variable. Use your Doubao model or endpoint ID.',
-    )
-  }
-
-  const messages = request.messages
-    .map((message) => ({
-      role: message.role,
-      content: message.content.trim(),
-    }))
-    .filter((message) => message.content.length > 0) as ModelMessage[]
-
-  if (messages.length === 0) {
-    logChatEvent('request rejected: empty message content')
-    throw new Error('Message content cannot be empty.')
-  }
-
-  return messages
-}
-
 async function handleChatRequest(
   _event: Electron.IpcMainInvokeEvent,
   request: ChatRequest,
-): Promise<ChatResponse> {
+) {
   logChatEvent('IPC request received', {
     messageCount: request.messages.length,
+    providerId: request.target.providerId,
+    modelId: request.target.modelId,
   })
 
-  const messages = normalizeMessages(request)
-  const model = arkModel as string
-
-  const lastMessage = messages.at(-1)
-
-  logChatEvent('sending request to Doubao', {
-    model,
-    messageCount: messages.length,
-    lastRole: lastMessage?.role,
-    lastContentLength:
-      typeof lastMessage?.content === 'string'
-        ? lastMessage.content.length
-        : undefined,
-  })
-
-  try {
-    const { text } = await generateText({
-      model: doubaoProvider.chatModel(model),
-      messages,
-    })
-
-    logChatEvent('response received from Doubao', {
-      outputLength: text.length,
-    })
-
-    return { text }
-  } catch (error) {
-    logChatEvent('request failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    throw error
-  }
+  return generateChatResponse(request)
 }
 
 async function handleChatStreamRequest(
@@ -205,21 +127,8 @@ async function handleChatStreamRequest(
   logChatEvent('stream IPC request received', {
     requestId: request.requestId,
     messageCount: request.messages.length,
-  })
-
-  const messages = normalizeMessages(request)
-  const model = arkModel as string
-  const lastMessage = messages.at(-1)
-
-  logChatEvent('starting Doubao stream', {
-    requestId: request.requestId,
-    model,
-    messageCount: messages.length,
-    lastRole: lastMessage?.role,
-    lastContentLength:
-      typeof lastMessage?.content === 'string'
-        ? lastMessage.content.length
-        : undefined,
+    providerId: request.target.providerId,
+    modelId: request.target.modelId,
   })
 
   const { sender } = event
@@ -228,10 +137,7 @@ async function handleChatStreamRequest(
     let text = ''
 
     try {
-      const result = streamText({
-        model: doubaoProvider.chatModel(model),
-        messages,
-      })
+      const result = await startChatStream(request)
 
       for await (const part of result.fullStream) {
         if (part.type !== 'text-delta' || !part.text) {
@@ -270,6 +176,42 @@ async function handleChatStreamRequest(
   })()
 }
 
+async function handleCreateProvider(
+  _event: Electron.IpcMainInvokeEvent,
+  request: CreateProviderRequest,
+) {
+  return createProvider(request)
+}
+
+async function handleTestProviderConnection(
+  _event: Electron.IpcMainInvokeEvent,
+  request: CreateProviderRequest,
+) {
+  return testProviderConnection(request)
+}
+
+function registerIpcHandlers(): void {
+  ipcMain.handle(chatChannels.sendMessage, handleChatRequest)
+  ipcMain.handle(chatChannels.streamMessage, handleChatStreamRequest)
+  ipcMain.handle(providerChannels.createProvider, handleCreateProvider)
+  ipcMain.handle(
+    providerChannels.testConnection,
+    handleTestProviderConnection,
+  )
+  ipcMain.handle(providerChannels.getBootstrapState, () => getBootstrapState())
+  ipcMain.handle(providerChannels.listProviders, () => listProviders())
+  ipcMain.handle(
+    providerChannels.setProviderEnabled,
+    (_event, payload: { providerId: string; enabled: boolean }) =>
+      setProviderEnabled(payload.providerId, payload.enabled),
+  )
+  ipcMain.handle(
+    providerChannels.setModelEnabled,
+    (_event, payload: { modelId: string; enabled: boolean }) =>
+      setModelEnabled(payload.modelId, payload.enabled),
+  )
+}
+
 void app.whenReady().then(async () => {
   if (process.platform === 'win32') {
     app.setAppUserModelId('com.opencopilot.app')
@@ -286,15 +228,10 @@ void app.whenReady().then(async () => {
   })
 
   registerAppProtocol()
-  ipcMain.handle(chatChannels.sendMessage, handleChatRequest)
-  ipcMain.handle(chatChannels.streamMessage, handleChatStreamRequest)
-  logChatEvent('chat handler registered', {
-    model: arkModel ?? null,
-    baseUrl: arkBaseUrl,
-    hasApiKey: Boolean(arkApiKey),
-  })
-  createWindow()
+  registerIpcHandlers()
   setupUpdater()
+  createAppMenu()
+  createWindow()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
